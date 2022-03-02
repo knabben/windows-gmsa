@@ -1,0 +1,8 @@
+apiVersion: data.packaging.carvel.dev/v1alpha1
+kind: PackageMetadata
+metadata:
+  name: windows.knabben.github.com
+spec:
+  displayName: "windows-gmsa"
+  longDescription: "Windows gMSA package"
+  shortDescription: "Windows gMSA package"
