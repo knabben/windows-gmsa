@@ -1,3 +1,11 @@
 ---
 apiVersion: imgpkg.carvel.dev/v1alpha1
+images:
+- annotations:
+    kbld.carvel.dev/id: harbor-repo.vmware.com/dockerhub-proxy-cache/sigwindowstools/k8s-gmsa-webhook:v0.3.0
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: v0.3.0
+          url: harbor-repo.vmware.com/dockerhub-proxy-cache/sigwindowstools/k8s-gmsa-webhook:v0.3.0
+  image: harbor-repo.vmware.com/dockerhub-proxy-cache/sigwindowstools/k8s-gmsa-webhook@sha256:56bba3b5a4788c05dc45f51444b924f6bed05a29789e04e43a6e2c3dbb07d9ce
 kind: ImagesLock

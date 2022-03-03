@@ -1,0 +1,8 @@
+#@data/values
+---
+container:
+  image: harbor-repo.vmware.com/dockerhub-proxy-cache/sigwindowstools/k8s-gmsa-webhook:v0.3.0
+  port: 443
+
+certificate:
+  secret_name: gmsa-server-cert

@@ -1,3 +1,5 @@
+#@ load("@ytt:data", "data")
+
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -117,3 +119,138 @@ spec:
     plural: gmsacredentialspecs
   scope: Cluster
 ---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gmsa-certificate
+  namespace: default
+  labels:
+    app: windows-gmsa
+spec:
+  dnsNames:
+    - windows-gmsa.default.svc
+    - windows-gmsa.default.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: gmsa-issuer
+  secretName: #@ data.values.certificate.secret_name
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: gmsa-issuer
+  namespace: default
+  labels:
+    app: windows-gmsa
+spec:
+  selfSigned: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: windows-gmsa
+  namespace: default
+  labels:
+    app: windows-gmsa
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: windows-gmsa-role
+  labels:
+    app: windows-gmsa
+rules:
+  - apiGroups: ["windows.k8s.io"]
+    resources: ["gmsacredentialspecs"]
+    verbs: ["get", "use"]
+  - apiGroups: ["authorization.k8s.io"]
+    resources: ["localsubjectaccessreviews"]
+    verbs: ["create"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: windows-gmsa-binding
+  labels:
+    app: windows-gmsa
+subjects:
+  - kind: ServiceAccount
+    name: windows-gmsa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: windows-gmsa-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: windows-gmsa
+  namespace: default
+  labels:
+    app: windows-gmsa
+spec:
+  ports:
+    - port: 443
+      targetPort: #@ data.values.container.port
+  selector:
+    app: windows-gmsa
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: windows-gmsa
+  namespace: default
+  labels:
+    app: windows-gmsa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: windows-gmsa
+  template:
+    metadata:
+      labels:
+        app: windows-gmsa
+    spec:
+      serviceAccountName: windows-gmsa
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+      containers:
+        - name: gmsa
+          image: #@ data.values.container.image
+          imagePullPolicy: IfNotPresent
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /health
+              port: #@ data.values.container.port
+          ports:
+            - containerPort: #@ data.values.container.port
+          volumeMounts:
+            - name: tls
+              mountPath: "/tls"
+              readOnly: true
+          env:
+            - name: TLS_KEY
+              value: /tls/key
+            - name: TLS_CRT
+              value: /tls/crt
+            - name: HTTPS_PORT
+              value: #@ str(data.values.container.port)
+      volumes:
+        - name: tls
+          secret:
+            secretName: #@ data.values.certificate.secret_name
+            items:
+              - key: tls.key
+                path: key
+              - key: tls.crt
+                path: crt

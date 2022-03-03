@@ -17,9 +17,8 @@ push-repo: build-repo
 	imgpkg push -b $(url_repository) -f repository
 
 # Tanzu commands targets
-
 tanzu-install-repo:
 	tanzu package repository add windows-repo --url $(url_repository)
 
-tanzu-install-package:
+tanzu-install-package: tanzu-install-repo
 	tanzu package install windows-gmsa --package-name windows.knabben.github.com --version $(version)

@@ -2,6 +2,6 @@
 apiVersion: imgpkg.carvel.dev/v1alpha1
 images:
 - annotations:
-    kbld.carvel.dev/id: wingmsa.azurecr.io/gmsa-pkg@sha256:ff5afffc292c124ba8b2502a6951c2fed00a817aa48df599deb7db01b69011f2
-  image: wingmsa.azurecr.io/gmsa-pkg@sha256:ff5afffc292c124ba8b2502a6951c2fed00a817aa48df599deb7db01b69011f2
+    kbld.carvel.dev/id: wingmsa.azurecr.io/gmsa-pkg@sha256:17653746f28251c18b1f07cae2cc8ed24189bfcdd3e83591ed50d547744f9afd
+  image: wingmsa.azurecr.io/gmsa-pkg@sha256:17653746f28251c18b1f07cae2cc8ed24189bfcdd3e83591ed50d547744f9afd
 kind: ImagesLock
