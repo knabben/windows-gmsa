@@ -1,5 +1,13 @@
 #@ load("@ytt:data", "data")
 
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: #@ data.values.namespace
+  labels:
+    gmsa-webhook: disabled
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -123,13 +131,13 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: gmsa-certificate
-  namespace: default
+  namespace: #@ data.values.namespace
   labels:
     app: windows-gmsa
 spec:
   dnsNames:
-    - windows-gmsa.default.svc
-    - windows-gmsa.default.svc.cluster.local
+    - windows-gmsa.gmsa-webhook.svc
+    - windows-gmsa.gmsa-webhook.svc.cluster.local
   issuerRef:
     kind: Issuer
     name: gmsa-issuer
@@ -139,7 +147,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: gmsa-issuer
-  namespace: default
+  namespace: #@ data.values.namespace
   labels:
     app: windows-gmsa
 spec:
@@ -149,7 +157,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: windows-gmsa
-  namespace: default
+  namespace: #@ data.values.namespace
   labels:
     app: windows-gmsa
 ---
@@ -176,7 +184,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: windows-gmsa
-    namespace: default
+    namespace: #@ data.values.namespace
 roleRef:
   kind: ClusterRole
   name: windows-gmsa-role
@@ -186,7 +194,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: windows-gmsa
-  namespace: default
+  namespace: #@ data.values.namespace
   labels:
     app: windows-gmsa
 spec:
@@ -196,11 +204,69 @@ spec:
   selector:
     app: windows-gmsa
 ---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: gmsa-mutating-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: gmsa-webhook/gmsa-certificate
+  labels:
+    app: windows-gmsa
+webhooks:
+  - name: admission-webhook.windows-gmsa.sigs.k8s.io
+    clientConfig:
+      service:
+        name: windows-gmsa
+        namespace: #@ data.values.namespace
+        path: "/mutate"
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["*"]
+        resources: ["pods"]
+    failurePolicy: Fail
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+    namespaceSelector:
+      matchExpressions:
+        - key: #@ data.values.namespace
+          operator: NotIn
+          values: [disabled]
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: gmsa-validation
+  annotations:
+    cert-manager.io/inject-ca-from: gmsa-webhook/gmsa-certificate
+  labels:
+    app: windows-gmsa
+webhooks:
+  - name: admission-webhook.windows-gmsa.sigs.k8s.io
+    clientConfig:
+      service:
+        name: windows-gmsa
+        namespace: #@ data.values.namespace
+        path: "/validate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["*"]
+        resources: ["pods"]
+    failurePolicy: Fail
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+    namespaceSelector:
+      matchExpressions:
+        - key: #@ data.values.namespace
+          operator: NotIn
+          values: [disabled]
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: windows-gmsa
-  namespace: default
+  namespace: #@ data.values.namespace
   labels:
     app: windows-gmsa
 spec:

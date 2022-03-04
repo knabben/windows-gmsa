@@ -4,7 +4,7 @@ Experimental Windows Group Managed Service Account Packaging for Tanzu.
 
 NOTE: `cert-manager` MUST be installed on your cluster.
 
-NOTE: This is [HELM Chart](https://github.com/kubernetes-sigs/windows-gmsa) clone.
+NOTE: This is a clone from `https://github.com/kubernetes-sigs/windows-gmsa` HELM chart
 
 ## Packaging
 

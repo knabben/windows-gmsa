@@ -1,5 +1,7 @@
 #@data/values
 ---
+namespace: gmsa-webhook
+
 container:
   image: harbor-repo.vmware.com/dockerhub-proxy-cache/sigwindowstools/k8s-gmsa-webhook:v0.3.0
   port: 443

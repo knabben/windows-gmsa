@@ -11,7 +11,7 @@ spec:
     spec:
       fetch:
         - imgpkgBundle:
-            image: wingmsa.azurecr.io/gmsa-pkg@sha256:17653746f28251c18b1f07cae2cc8ed24189bfcdd3e83591ed50d547744f9afd
+            image: wingmsa.azurecr.io/gmsa-pkg@sha256:e91b41b6df872de2f62e94e62aab4c6db861796874759a159a9cf195b21d1fc2
       template:
         - ytt:
             paths:
